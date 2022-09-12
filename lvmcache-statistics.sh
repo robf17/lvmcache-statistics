@@ -20,11 +20,16 @@
 #
 # History:
 # 20141220 hammerar, initial version
+# 20220912 robf17, allow lv on the command line
+# 20220912 robf17, fix error when NrPolicyArgs is "-" (kernel 5.4)
 #
 ##################################################################
 set -o nounset
 
 LVCACHED=/dev/vg00/lvol0
+if [ -n "$1" ]; then
+	LVCACHED=/dev/$1
+fi
 
 RESULT=$(dmsetup status ${LVCACHED})
 if [ $? -ne 0 ]; then
@@ -86,14 +91,12 @@ if [ ${NrCoreArgs} -ne 0 ]; then
 
   INDEX=$((INDEX+2*NrCoreArgs))
 fi
-
 INDEX=$((INDEX+1))
 PolicyName="${RESULTS[${INDEX}]}"
 INDEX=$((INDEX+1))
 NrPolicyArgs="${RESULTS[${INDEX}]}"
 PolicyArgs=""
-
-if [ ${NrPolicyArgs} -ne 0 ]; then
+if [ -n "${NrPolicyArgs}" -a "${NrPolicyArgs}" != "-" ]; then
 
   for ITEM in $(seq $((INDEX+1)) $((2*NrPolicyArgs+INDEX)) ); do
      PolicyArgs="${PolicyArgs}${RESULTS[${ITEM}]} "
@@ -120,4 +123,5 @@ echo "- Demotions/Promotions/Dirty: ${NrDemotions}/${NrPromotions}/${NrDirty}"
 echo "- Features in use: ${FeatureArgs}"
 
 #### EOF #########################################################
+
 
